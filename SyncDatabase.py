@@ -30,7 +30,7 @@ class SyncDatabase(SerializeDatabase):
                 readers_left = True
         return readers_left
 
-    def value_set(self, key, value):
+    def value_set(self, key: object, value: object):
         with self.write_lock:  # only one that can write
             # get all read spaces
             while self.readers_still_reading():
