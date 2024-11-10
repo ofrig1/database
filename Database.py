@@ -5,15 +5,29 @@ logging.basicConfig(filename="database.log", level=logging.DEBUG, format='%(asct
 
 class Database:
     def __init__(self):
+        """
+        Initializes the database by creating an empty dictionary to store data
+        """
         self.data = {}
         logging.info("Database initialized.")
 
     def value_set(self, key, value):
+        """
+        Stores a key-value pair in the database.
+        :param key: The key under which the value will be stored
+        :param value: The value to store in the database
+        :return: True if the operation is successful
+        """
         self.data[key] = value
         logging.info(f"Set: {key} = {value}")
         return True
 
     def value_get(self, key):
+        """
+        Retrieves the value associated with a given key
+        :param key: The key whose value is to be retrieved
+        :return: The value associated with the key if it exists, otherwise None
+        """
         if key in self.data:
             logging.info(f"Get: {key} = {self.data[key]}")
             return self.data[key]

@@ -1,3 +1,5 @@
+import time
+
 from SyncDatabase import SyncDatabase
 import threading
 
@@ -8,8 +10,9 @@ def writer(db, key, value):
 
 
 def reader(db, key):
+    thread_id = threading.get_ident()  # Get the current thread ID
     value = db.value_get(key)
-    print(f"Reader got {key}: {value}")
+    print(f"Reader (Thread ID: {thread_id}) got {key}: {value}")
 
 
 def main():
@@ -31,10 +34,29 @@ def main():
 
     threads = []
     print("\nStarting concurrent read/write operations...")
-    for i in range(5):
-        t_write = threading.Thread(target=writer, args=(my_database, f'key{i}', f'value{i}'))
-        t_read = threading.Thread(target=reader, args=(my_database, f'key{i}'))
-        threads.extend([t_write, t_read])
+    for i in range(11):
+        t_read = threading.Thread(target=reader, args=(my_database, 'country'))
+        threads.append(t_read)
+
+    # Start all threads
+    for t in threads:
+        t.start()
+
+    # Wait for all threads to finish
+    for t in threads:
+        t.join()
+
+    # Final load to check data consistency
+    print("\nFinal data check after concurrent operations...")
+    my_database.load()
+
+    threads = []
+    print("\nStarting concurrent read/write operations...")
+    for i in range(4):
+        t_read = threading.Thread(target=reader, args=(my_database, 'country'))
+        threads.append(t_read)
+    t_write = threading.Thread(target=writer, args=(my_database, f'world', f'earth'))
+    threads.append(t_write)
 
     # Start all threads
     for t in threads:
