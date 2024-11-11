@@ -9,7 +9,7 @@ class Database:
         Initializes the database by creating an empty dictionary to store data
         """
         self.data = {}
-        logging.info("Database initialized.")
+        logging.info("Database initialized")
 
     def value_set(self, key, value):
         """
@@ -36,6 +36,14 @@ class Database:
             return None
 
     def value_delete(self, key):
+        """
+        Deletes a key-value pair from the database.
+        If the specified key exists in the database, this method removes the key
+        along with its associated value. If the key does not exist, no deletion
+        occurs and the method logs that the key was not found.
+        :param key: The key to delete from the database
+        :return: None
+        """
         if key in self.data:
             self.data.pop(key)
             logging.info(f"Delete: {key} (successful)")
