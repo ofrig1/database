@@ -112,16 +112,18 @@ class SyncDatabase(SerializeDatabase):
         It waits until there are no active readers before proceeding with the delete operation.
         After deleting, it resets reader tracking variables
         :param key: The key to delete from the database
-        :return: None
+        :return: The deleted value if it existed; otherwise, None.
         """
         logging.debug(f"Attempting to delete key '{key}'")
         with self.write_lock:  # only one can write
             # Wait until there are no readers (get all reader spaces)
             while self.readers_still_reading():
                 pass
-            super().value_delete(key)
+        deleted_value = super().value_delete(key)
         logging.info(f"Deleted key '{key}' (if it existed)")
         # # Reset reader tracking (release reading spots)
         for i in range(self.max_readers):
             self.read_array[i-1] = 0
         self.read_count = 0  # Reset reader count
+        return deleted_value  # Return the deleted value if it existed
+

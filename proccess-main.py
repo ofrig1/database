@@ -1,5 +1,5 @@
 from SyncDatabase import SyncDatabase
-import threading
+import multiprocessing
 import logging
 
 
@@ -10,10 +10,10 @@ def writer(db, key, value):
     :param key: The key to store in the database
     :param value: The value associated with the key
     """
-    logging.info(f"Writer thread attempting to set key '{key}' with value '{value}'")
+    logging.info(f"Writer process attempting to set key '{key}' with value '{value}'")
     db.value_set(key, value)
     print(f"Writer set {key} to {value}")
-    logging.info(f"Writer thread set key '{key}' to '{value}'")
+    logging.info(f"Writer process set key '{key}' to '{value}'")
 
 
 def reader(db, key):
@@ -22,24 +22,27 @@ def reader(db, key):
     :param db: An instance of SyncDatabase
     :param key: The key to retrieve from the database
     """
-    thread_id = threading.get_ident()  # Get the current thread ID
-    logging.info(f"Reader thread with ID {thread_id} attempting to get key '{key}'")
+    process_id = multiprocessing.current_process().pid  # Get the current thread ID
+    logging.info(f"Reader process with ID {process_id} attempting to get key '{key}'")
     value = db.value_get(key)
-    print(f"Reader (Thread ID: {thread_id}) got {key}: {value}")
+    print(f"Reader got {key}: {value}")
     if value is not None:
-        logging.info(f"Reader thread with ID {thread_id} retrieved key '{key}' with value '{value}'")
+        logging.info(f"Reader process with ID {process_id} retrieved key '{key}' with value '{value}'")
     else:
-        logging.warning(f"Reader thread with ID {thread_id} could not find key '{key}'")
+        logging.warning(f"Reader process with ID {process_id} could not find key '{key}'")
 
 
 def main():
     """
     Initializes a SyncDatabase instance, performs several write and delete
-    operations, saves and loads the database state, and launches concurrent threads
+    operations, saves and loads the database state, and launches concurrent processes
     to read and write data.
     """
+    # Set up the multiprocessing context
+    ctx = multiprocessing.get_context('spawn')
+
     # Initialize database and add initial data
-    my_database = SyncDatabase()
+    my_database = SyncDatabase(mode='processes')
     my_database.value_set('house', '39 lylewood')
     my_database.value_set('city', 'tenafly')
     my_database.value_set('country', 'US')
@@ -60,40 +63,40 @@ def main():
     my_database.load()
 
     # Start concurrent read operations
-    threads = []
-    logging.info("Starting multiple reader threads.")
+    processes = []
+    logging.info("Starting multiple reader processes.")
     for i in range(11):
-        t_read = threading.Thread(target=reader, args=(my_database, 'country'))
-        threads.append(t_read)
+        p_read = ctx.Process(target=reader, args=(my_database, 'country'))
+        processes.append(p_read)
 
-    # Start all threads
-    for t in threads:
-        t.start()
+    # Start all processes
+    for p in processes:
+        p.start()
 
-    # Wait for all threads to finish
-    for t in threads:
-        t.join()
+    # Wait for all processes to finish
+    for p in processes:
+        p.join()
 
     # Final load to check data consistency
     logging.info("Loading database state after concurrent read operations.")
     my_database.load()
 
     # Start concurrent read and write operations
-    threads = []
-    logging.info("Starting concurrent read and write threads.")
+    processes = []
+    logging.info("Starting concurrent read and write processes.")
     for i in range(4):
-        t_read = threading.Thread(target=reader, args=(my_database, 'country'))
-        threads.append(t_read)
-    t_write = threading.Thread(target=writer, args=(my_database, f'world', f'earth'))
-    threads.append(t_write)
+        p_read = ctx.Process(target=reader, args=(my_database, 'country'))
+        processes.append(p_read)
+    p_write = ctx.Process(target=writer, args=(my_database, 'world', 'earth'))
+    processes.append(p_write)
 
-    # Start all threads
-    for t in threads:
-        t.start()
+    # Start all processes
+    for p in processes:
+        p.start()
 
-    # Wait for all threads to finish
-    for t in threads:
-        t.join()
+    # Wait for all processes to finish
+    for p in processes:
+        p.join()
 
     # Final load to check data consistency
     logging.info("Loading final database state after concurrent operations.")
@@ -101,4 +104,5 @@ def main():
 
 
 if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
     main()

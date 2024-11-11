@@ -21,6 +21,7 @@ class SerializeDatabase(Database):
         try:
             with open('data.pkl', 'wb') as file:
                 pickle.dump(self.data, file)
+            print("Data loaded from data.pkl:", self.data)
             logging.info("Data serialized and saved to data.pkl")
         except Exception as e:
             logging.error(f"Failed to save data: {e}")
