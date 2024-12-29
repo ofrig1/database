@@ -126,4 +126,3 @@ class SyncDatabase(SerializeDatabase):
             self.read_array[i-1] = 0
         self.read_count = 0  # Reset reader count
         return deleted_value  # Return the deleted value if it existed
-

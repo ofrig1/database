@@ -1,4 +1,4 @@
-from SyncDatabase import SyncDatabase
+from SyncDatabase2 import SyncDatabase2
 import threading
 import logging
 
@@ -39,7 +39,7 @@ def main():
     to read and write data.
     """
     # Initialize database and add initial data
-    my_database = SyncDatabase()
+    my_database = SyncDatabase2()
     my_database.value_set('house', '39 lylewood')
     my_database.value_set('city', 'tenafly')
     my_database.value_set('country', 'US')
@@ -54,9 +54,10 @@ def main():
         print(my_database.value_get('city'))
 
     # Save and load data
-    logging.info("Saving current database state")
-    my_database.save()
+    # logging.info("Saving current database state")
+    # my_database.save()
     logging.info("Loading saved database state")
+    my_database.data = {}
     my_database.load()
 
     # Start concurrent read operations
@@ -76,7 +77,9 @@ def main():
 
     # Final load to check data consistency
     logging.info("Loading database state after concurrent read operations.")
+    my_database.data = {}
     my_database.load()
+    print(my_database.data)
 
     # Start concurrent read and write operations
     threads = []
@@ -95,9 +98,11 @@ def main():
     for t in threads:
         t.join()
 
+    my_database.data = {}
     # Final load to check data consistency
     logging.info("Loading final database state after concurrent operations.")
     my_database.load()
+    print(my_database.data)
 
 
 if __name__ == '__main__':
